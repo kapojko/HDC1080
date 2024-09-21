@@ -47,7 +47,6 @@ bool HDC1080_DefInit(unsigned int tempResolution, unsigned int humResolution) {
         .softwareReset = HDC1080_RESET_NORMAL,
         .heater = HDC1080_HEATER_DISABLED,
         .modeOfAcquisition = HDC1080_ACQ_TEMP_AND_HUM,
-        .batteryStatus = HDC1080_BATTERY_GT_2_8V,
         .tempResolution = tempResolution,
         .humResolution = humResolution
     };
@@ -116,12 +115,12 @@ bool HDC1080_ReadConfiguration(struct HDC1080_Configuration *config) {
         return false;
     }
 
-    config->softwareReset = (data[1] >> 7) & 1;
-    config->heater = (data[1] >> 5) & 1;
-    config->modeOfAcquisition = (data[1] >> 4) & 1;
-    config->batteryStatus = (data[1] >> 3) & 1;
-    config->tempResolution = (data[1] >> 2) & 1;
-    config->humResolution = (data[1] >> 0) & 3;
+    config->softwareReset = (data[0] >> 7) & 1;
+    config->heater = (data[0] >> 5) & 1;
+    config->modeOfAcquisition = (data[0] >> 4) & 1;
+    config->batteryStatus = (data[0] >> 3) & 1;
+    config->tempResolution = (data[0] >> 2) & 1;
+    config->humResolution = (data[0] >> 0) & 3;
 
     sensorConfig = *config;
 
@@ -130,13 +129,14 @@ bool HDC1080_ReadConfiguration(struct HDC1080_Configuration *config) {
 
 bool HDC1080_WriteConfiguration(const struct HDC1080_Configuration *config) {
     uint8_t data[2] = {
-        0,
         (config->softwareReset << 7) |
         (config->heater << 5) |
         (config->modeOfAcquisition << 4) |
         (config->batteryStatus << 3) |
         (config->tempResolution << 2) |
-        (config->humResolution << 0)
+        (config->humResolution << 0),
+
+        0
     };
 
     int ret = platform.i2cWriteReg(HDC1080_I2C_ADDR, HDC1080_REG_CONFIGURATION, data, 2, HDC1080_I2C_TIMEOUT);
